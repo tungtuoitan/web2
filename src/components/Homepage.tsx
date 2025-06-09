@@ -1,3 +1,4 @@
+import Cube3D from "./cubic.3d";
 import FisheyeLensCanvas from "./FishEye";
 
 
@@ -29,7 +30,8 @@ export default function Homepage() {
                     zIndex: 2,
                 }}></div> */}
                 {/* <EraserCanvas /> */}
-                <FisheyeLensCanvas />
+                <Cube3D />
+                {/* <FisheyeLensCanvas /> */}
         </div>
     );
 }

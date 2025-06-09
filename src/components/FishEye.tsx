@@ -31,13 +31,16 @@ const FisheyeLensCanvas: React.FC = () => {
 
     // Add text "xxx" with font size 8px
     ctx.font = "8px sans-serif";
-    ctx.fillStyle = "black";
-    ctx.fillText("xxx", 10, 20);
-
+    ctx.fillStyle = "white";
+    
+    
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
     img.onload = () => {
-      ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+        ctx.drawImage(img, dx, dy, drawWidth, drawHeight);
+        ctx.fillText(`Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
+            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
+            and more recently with desktop publis
+            hing software like Aldus PageMaker including versions of Lorem Ipsum.`, 10, 20);
       //   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
 
@@ -54,6 +57,10 @@ const FisheyeLensCanvas: React.FC = () => {
       // Redraw background
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(imageRef.current, 0, 0, canvas.width, canvas.height);
+        ctx.fillText(`Lorem Ipsum is simply dummy text of the printing and typesetting industry. 
+        Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, 
+        and more recently with desktop publis
+        hing software like Aldus PageMaker including versions of Lorem Ipsum.`, 10, 20);
 
       // Capture vùng ảnh quanh chuột
       const sx = mouseX - radius;
@@ -74,11 +81,11 @@ const FisheyeLensCanvas: React.FC = () => {
 
       // Vẽ vùng ảnh bị phóng đại
       ctx.drawImage(
-        imageRef.current,
-        sx * (imageRef.current.width / canvas.width),
-        sy * (imageRef.current.height / canvas.height),
-        sWidth * (imageRef.current.width / canvas.width),
-        sHeight * (imageRef.current.height / canvas.height),
+        canvas,
+        sx * (canvas.width / canvas.width),
+        sy * (canvas.height / canvas.height),
+        sWidth * (canvas.width / canvas.width),
+        sHeight * (canvas.height / canvas.height),
         dx,
         dy,
         dWidth,
