@@ -4,7 +4,7 @@ export const photoData: Photo[] = [
     {
         id: 1,
         title: "Sunset Over the Mountains",
-        url: "/bg1.jpg",
+        url: "/bg1.png",
         name: "Sunset",
         description: "A beautiful sunset over the mountains.",
         dateTaken: new Date("2023-01-15"),

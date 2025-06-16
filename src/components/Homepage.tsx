@@ -2,6 +2,10 @@ import { useEffect, useLayoutEffect, useState} from "react";
 import {photoData} from "../data/data";
 import type {Photo} from "../types/Photo";
 import {PhotoFrame} from "./PhotoFrame";
+import FisheyeLensCanvas from "./FishEye";
+import GlassMouse from "./GlassMouse";
+import EraserCanvas from "./EraserCanvas";
+import ImageMagnifier from "./MagnifierMouse";
 
 
 
@@ -23,7 +27,7 @@ export default function Homepage() {
     //     }, new Map<string, Photo[]>())
     // ).map(([_, arr]) => arr);
 
-    const itemWidth = 132 *2
+    const itemWidth = 132 *10
     const itemHeight = itemWidth/16*9;
     const itemsEachRow = 8;
     const itemTotal = photos.length;
@@ -31,7 +35,6 @@ export default function Homepage() {
     const gapX = itemWidth/16;
     const containerWidth = itemWidth * itemsEachRow + gapX * (itemsEachRow - 1);
     const containerHeight = Math.ceil(itemTotal / itemsEachRow) * itemHeight + gapX * (Math.ceil(itemTotal / itemsEachRow) - 1);
-    console.log(containerWidth, containerHeight, itemTotal, itemsEachRow, itemWidth, itemHeight);
 
 
     // const preloadImage = (url: string): Promise<void> => {
@@ -83,45 +86,27 @@ export default function Homepage() {
 
     return (
 
-        <div className="h-screen overflow-hidden bg-black text-white border-red-500 border-2
+        <div className="h-screen overflow-hidden bg-black text-white
             relative"
             >
-            {/* {photosByContentType.map((photos: Photo[]) => (
-                <div className="border-green-500 border-2 " 
-                style={{ width: '100%', height: '300px' }} 
-                key={photos[0].contentType}>
-                    {photos.map((photo: Photo) => (
-                        <PhotoFrame
-                            key={photo.id}
-                            photo={photo}
-                            fitType="both"
-                            width={600}
-                        />
-                    ))}
-                </div>
-            ))} */}
-            <div
-                className="border-green-500 border-2 p-4 absolute flex-wrap"
-                style={{
-                    width: containerWidth + 'px',
-                    height: containerHeight + 'px',
-                    // display: 'grid',
-                    // gridTemplateColumns: `repeat(${itemsEachRow}, ${itemWidth}px)`,
-                    // gap: `${gapX}px ${gapX}px`,
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: `${gapX}px`,
-                }}
-            >
-                {photos.map((photo: Photo) => (
-                    <PhotoFrame
-                        key={photo.id}
-                        photo={photo}
-                        fitType="both"
-                        width={itemWidth}
-                    />
-                ))}
-            </div>
+                {/* <PhotoFrame
+                    key={photos[0].id}
+                    photo={photos[0]}
+                    fitType="both"
+                    width={itemWidth}
+                /> */}
+                {/* <FisheyeLensCanvas/> */}
+                <ImageMagnifier
+                    src="/bg3.jpg"
+                    className="w-full h-full object-cover"
+                    width={itemWidth}
+                    height={itemHeight}
+                    magnifierHeight={100}
+                    magnifierWidth={100}
+                    zoomLevel={2}
+                />
+                {/* <EraserCanvas/> */}
+                {/* <img src="/bg1.png"/> */}
         </div>
     );
 }
