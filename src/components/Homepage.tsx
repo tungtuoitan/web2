@@ -1,11 +1,8 @@
-import { useEffect, useLayoutEffect, useState} from "react";
+import { useEffect, useState} from "react";
 import {photoData} from "../data/data";
 import type {Photo} from "../types/Photo";
-import {PhotoFrame} from "./PhotoFrame";
-import FisheyeLensCanvas from "./FishEye";
-import GlassMouse from "./GlassMouse";
-import EraserCanvas from "./EraserCanvas";
-import ImageMagnifier from "./MagnifierMouse";
+import Zoomable3JSGrid from "./Zoombable3JS";
+
 
 
 
@@ -96,7 +93,7 @@ export default function Homepage() {
                     width={itemWidth}
                 /> */}
                 {/* <FisheyeLensCanvas/> */}
-                <ImageMagnifier
+                {/* <ImageMagnifier
                     src="/bg3.jpg"
                     className="w-full h-full object-cover"
                     width={itemWidth}
@@ -104,9 +101,15 @@ export default function Homepage() {
                     magnifierHeight={100}
                     magnifierWidth={100}
                     zoomLevel={2}
-                />
+                /> */}
                 {/* <EraserCanvas/> */}
                 {/* <img src="/bg1.png"/> */}
+                {/* // w-full h-full  */}
+                {/* <img src="/bg13.jpg" className="
+                object-cover absolute top-0 left-0 z-0"
+                style={{width: '200%', height: '200%'}}
+                 /> */}
+                 <Zoomable3JSGrid/>
         </div>
     );
 }
