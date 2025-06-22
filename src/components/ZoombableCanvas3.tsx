@@ -95,7 +95,7 @@ const ZoomableCanvasGrid = () => {
       }
 
       const cacheKey = `${i}-${Math.round(scale * 100)}`;
-      let tile = tileCache.current.get(cacheKey);
+      let tile = undefined;
 
       if (!tile) {
         tile = document.createElement("canvas");
@@ -104,13 +104,13 @@ const ZoomableCanvasGrid = () => {
         const tileCtx = tile.getContext("2d");
         if (tileCtx) {
           tileCtx.drawImage(img, 0, 0, tile.width, tile.height);
-          tileCache.current.set(cacheKey, tile);
+        //   tileCache.current.set(cacheKey, tile);
 
           // Limit cache size (e.g., 100 entries)
-          if (tileCache.current.size > 100) {
-            const oldestKey = tileCache.current.keys().next().value;
-            tileCache.current.delete(oldestKey ?? "");
-          }
+        //   if (tileCache.current.size > 100) {
+        //     const oldestKey = tileCache.current.keys().next().value;
+        //     tileCache.current.delete(oldestKey ?? "");
+        //   }
         }
       }
 
@@ -178,6 +178,28 @@ const ZoomableCanvasGrid = () => {
     needsRedraw.current = true; // Trigger redraw on zoom
   };
 
+   const handleDbClick = (e: any) => {
+    const zoomFactor =  1.1;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const x = (mouseX - offset.x) / scale;
+    const y = (mouseY - offset.y) / scale;
+
+    const newScale = Math.max(0.1, Math.min(15, scale * zoomFactor)); // Limit zoom range
+    const newOffsetX = mouseX - x * newScale;
+    const newOffsetY = mouseY - y * newScale;
+
+    setScale(newScale);
+    setOffset({ x: newOffsetX, y: newOffsetY });
+    needsRedraw.current = true; // Trigger redraw on zoom
+  };
+
   return (
     <div>
       <div
@@ -187,6 +209,8 @@ const ZoomableCanvasGrid = () => {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
+        onClick={handleDbClick}
+        
         style={{
           width: "100%",
           height: "800px",
