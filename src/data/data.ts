@@ -146,6 +146,87 @@ export const photoData: Photo[] = [
         dateTaken: new Date("2023-11-01"),
         contentType: "webding"
     },
+    {
+        id: 17,
+        title: "Foggy Morning Lake",
+        url: "/lighterImgs2/bg1.png",
+        name: "Foggy Lake",
+        description: "A calm lake covered in morning fog.",
+        dateTaken: new Date("2023-11-10"),
+        contentType: "landscape"
+    },
+    {
+        id: 18,
+        title: "Abstract Webding Pattern",
+        url: "/lighterImgs2/bg2.png",
+        name: "Abstract Webding",
+        description: "A colorful abstract webding pattern.",
+        dateTaken: new Date("2023-11-15"),
+        contentType: "webding"
+    },
+    {
+        id: 19,
+        title: "Portrait with Glasses",
+        url: "/lighterImgs2/bg3.png",
+        name: "Glasses Portrait",
+        description: "A portrait of a person wearing glasses.",
+        dateTaken: new Date("2023-11-20"),
+        contentType: "portrait"
+    },
+    {
+        id: 20,
+        title: "Night Sky with Stars",
+        url: "/lighterImgs2/bg4.png",
+        name: "Starry Night",
+        description: "A clear night sky filled with stars.",
+        dateTaken: new Date("2023-11-25"),
+        contentType: "landscape"
+    },
+    {
+        id: 21,
+        title: "Webding Symbolic Art",
+        url: "/lighterImgs2/bg5.png",
+        name: "Symbolic Webding",
+        description: "A symbolic webding art piece.",
+        dateTaken: new Date("2023-12-01"),
+        contentType: "webding"
+    },
+    {
+        id: 22,
+        title: "Portrait with Hat",
+        url: "/lighterImgs2/bg6.png",
+        name: "Hat Portrait",
+        description: "A portrait of a person wearing a hat.",
+        dateTaken: new Date("2023-12-05"),
+        contentType: "portrait"
+    },
+    {
+        id: 23,
+        title: "Mountain Lake Reflection",
+        url: "/lighterImgs2/bg7.png",
+        name: "Lake Reflection",
+        description: "Mountains reflected in a tranquil lake.",
+        dateTaken: new Date("2023-12-10"),
+        contentType: "landscape"
+    },
+    {
+        id: 24,
+        title: "Webding Geometric Shapes",
+        url: "/lighterImgs2/bg8.png",
+        name: "Geometric Webding",
+        description: "Webding image with geometric shapes.",
+        dateTaken: new Date("2023-12-15"),
+        contentType: "webding"
+    },
+    {
+        id: 25,
+        title: "Portrait with Smile",
+        url: "/lighterImgs2/bg9.png",
+        name: "Smiling Portrait",
+        description: "A cheerful portrait with a big smile.",
+        dateTaken: new Date("2023-12-20"),
+        contentType: "portrait"
+    },
 
 
 

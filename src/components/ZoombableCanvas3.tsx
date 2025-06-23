@@ -1,220 +1,95 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, useTexture } from "@react-three/drei";
 import { photoData } from "../data/data";
+import {CameraAnimator} from "./CameraAnimator";
+import ImagePlane from "./ImagePlane";
+import {useGeneralStore} from "./Provider";
 
 const imageUrls = photoData.map((photo) => photo.url);
 
-const TILE_SIZE = 200;
-const GAP = 20;
-const COLS = 5;
-const PADDING = 20;
-
-// vẫn còn hơi lag khi zoom lâu
-const ZoomableCanvasGrid = () => {
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const [scale, setScale] = useState(5);
-    const [currentScale, setCurrentScale] = useState<number>(1);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
-    const imagesRef = useRef<HTMLImageElement[]>([]);
-    const tileCache = useRef<Map<string, HTMLCanvasElement>>(new Map());
-    const [reDraw, setReDraw] = useState<boolean>(false); // Force re-render on state change
-
-    // 1 draw
-    const draw = () => {
-        console.log(currentScale)
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1); // Support high-DPI
-        ctx.imageSmoothingEnabled = true; 
-        const visibleStartX = -offset.x / currentScale;
-        const visibleStartY = -offset.y / currentScale;
-        const visibleEndX =
-            visibleStartX + canvas.width / currentScale / (window.devicePixelRatio || 1);
-        const visibleEndY =
-            visibleStartY + canvas.height / currentScale / (window.devicePixelRatio || 1);
-
-        for (let i = 0; i < imagesRef.current.length; i++) {
-            const img = imagesRef.current[i];
-            if (!img.complete) continue; // Skip unloaded images
-
-            const col = i % COLS;
-            const row = Math.floor(i / COLS);
-            const x = col * (TILE_SIZE + GAP) + PADDING;
-            const y = row * (TILE_SIZE + GAP) + PADDING;
-
-            if (
-                x + TILE_SIZE < visibleStartX ||
-                x > visibleEndX ||
-                y + TILE_SIZE < visibleStartY ||
-                y > visibleEndY
-            ) {
-                continue;
-            }
-
-            const cacheKey = `${i}-${Math.round(currentScale * 100)}`;
-            let tile = undefined;
-
-            if (!tile) {
-                tile = document.createElement("canvas");
-                tile.width = TILE_SIZE * currentScale;
-                tile.height = TILE_SIZE * currentScale;
-                const tileCtx = tile.getContext("2d");
-                if (tileCtx) {
-                    tileCtx.drawImage(img, 0, 0, tile.width, tile.height);
-                    tileCache.current.set(cacheKey, tile);
-
-                    // Limit cache size (e.g., 100 entries)
-                    if (tileCache.current.size > 100) {
-                        const oldestKey = tileCache.current.keys().next().value;
-                        tileCache.current.delete(oldestKey ?? "");
-                    }
-                }
-            }
-
-            ctx.drawImage(tile, x * currentScale + offset.x, y * currentScale + offset.y);
-        }
-
-        ctx.resetTransform(); // Reset for next draw
-        
-        if(currentScale < 5 && currentScale > 0.5) {
-            console.log("zooming in")
-            if(scale === 5) {
-                setCurrentScale(c => c + 0.001);
-            }
-            else if(scale === 0.5) {
-                setCurrentScale(c => c - 0.001);
-            }
-        }
-        else {
-            console.log("resetting zoom::::::::::::::", currentScale)
-            setReDraw(false); // Reset reDraw state
-        }
-    };
+const cts = {
+    imageWidth: 1920,
+    imageHeight: 1000,
+    marginX: 20, // Margin between images in pixels
+    marginY: 20, // Margin between images in pixels
+    fov: 75, // Field of view in degrees
+    near: 0.1,
+    far: 9000,
+}
 
 
+
+export default function Zoombable3JS() {
+    const {trigger, setTrigger,cameraPositionRef, photos, currentPhotoType, camZRef, setCurrentPhotoType, firstTime,setFirstTime} = useGeneralStore();
+ 
     
-
-
-    // 3. Load images and wait for them to be ready
     useEffect(() => {
-        const loadImages = async () => {
-            imagesRef.current = await Promise.all(
-                imageUrls.map(
-                    (url) =>
-                        new Promise<HTMLImageElement>((resolve) => {
-                            const img = new Image();
-                            img.src = url;
-                            img.crossOrigin = "anonymous";
-                            img.onload = () => resolve(img);
-                            img.onerror = () => resolve(img); // Handle errors gracefully
-                        })
-                )
-            );
-            setReDraw(true); // Trigger redraw after images are loaded
-        };
-        loadImages();
+        // tính toán vị trí camZ để hiển thị hình ảnh >= screen   
+        const fovRad = (cts.fov * Math.PI) / 180;
+        const requiredWidth = cts.imageWidth
+        const aspectRatio = window.innerWidth / window.innerHeight;
+        camZRef.current = (requiredWidth / aspectRatio) / (2 * Math.tan(fovRad / 2));
+        cameraPositionRef.current = [0, 0, camZRef.current];
     }, []);
-
-    // 4. Resize canvas to match container and handle high-DPI displays
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const container = containerRef.current;
-        if (!canvas || !container) return;
-
-        const resizeCanvas = () => {
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = container.clientWidth * dpr;
-            canvas.height = container.clientHeight * dpr;
-            canvas.style.width = `${container.clientWidth}px`;
-            canvas.style.height = `${container.clientHeight}px`;
-            setReDraw(false); // Trigger redraw on resize
-        };
-
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
-        return () => window.removeEventListener("resize", resizeCanvas);
-    }, []);
-
-    
-
-    // 5. redraw when necessary
-    useEffect(() => {
-        console.log("Redrawing canvas with scale:", currentScale,scale, reDraw);
-        let animationFrameId: number;
-        const render = () => {
-            if (reDraw) {
-                draw();
-                // setReDraw(false); // Reset reDraw state
-                animationFrameId = requestAnimationFrame(render);
-            }
-        };
-        render();
-        return () => cancelAnimationFrame(animationFrameId);
-    }, [currentScale, reDraw]);
-    
-
 
     return (
-        <div>
-            <div
-                ref={containerRef}
-                style={{
-                    width: "100%",
-                    height: "800px",
-                    overflow: "hidden",
-                    border: "1px solid gray",
-                    position: "relative",
-                    // cursor: isDragging ? "grabbing" : "grab",
-                }}
-            >
-                <canvas ref={canvasRef} />
-            </div>
-            <div></div>
-            <div
-                style={{
-                    marginTop: 10,
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "center",
-                    gap: 10,
-                }}
-            >
+        <>
                 <button
+                    className="bg-blue-500 text-white p-2 rounded absolute top-0 left-0 z-10"
+                    type="button"
                     onClick={() => {
-                        // console.log(currentScale, scale)
-                        setCurrentScale(c=>c + 0.001);
-                        setScale(5);
-                        setReDraw(true)
-                    }}
-                >
-                    Zoom In
-                </button>
-                <button
-                    onClick={() => {
-                        // console.log(currentScale, scale)
-                        setCurrentScale(c=>c - 0.001);
-                        setScale(0.5);
-                        setReDraw(true)
-                    }}
-                >
-                    Zoom Out
-                </button>
-                <button
-                    onClick={() => {
-                        // setScale(1);
-                        setOffset({ x: 0, y: 0 });
-                        setReDraw(true);
-                    }}
-                >
-                    Reset
-                </button>
-            </div>
-        </div>
-    );
-};
+                        // Get a random image in photos
+                        const randomIndex = Math.floor(Math.random() * photos.length);
+                        const randomPhoto = photos[randomIndex];
+                        setCurrentPhotoType(randomPhoto.contentType)
+                        
+                        const gridSize = 5;
+                        const row = Math.floor(randomIndex / gridSize);
+                        const col = randomIndex % gridSize;
+                        const x = col * (cts.imageWidth + cts.marginX);
+                        const y = -row * (cts.imageHeight + cts.marginY);
 
-export default ZoomableCanvasGrid;
+                        cameraPositionRef.current = [x, y, cameraPositionRef.current[2]+900]; // Update camera position to the right of the first image
+                        setTrigger((t) => t + 1)
+                    }}
+                >
+                    Animate
+                </button>
+                <Canvas
+                    id='canvas'
+                    camera={{ position: cameraPositionRef.current, fov: cts.fov, near: cts.near, far: cts.far }}
+                    style={{ height: "100vh", width: "100vw" }}
+                    shadows
+                    gl={{ antialias: true, alpha: false }}
+                    onCreated={(state) => {
+                        state.gl.setClearColor("black");
+                        state.gl.shadowMap.enabled = true;
+                        state.gl.shadowMap.type = THREE.PCFSoftShadowMap;
+                    }} 
+                    
+                >
+                    <OrbitControls />
+                    <axesHelper args={[200]} />
+                    <CameraAnimator />
+                    {imageUrls.map((url, index) => {
+                        // Vẽ grid 5x5 với marginX và marginY
+                        const gridSize = 5;
+                        const row = Math.floor(index / gridSize);
+                        const col = index % gridSize;
+                        const x = col * (cts.imageWidth + cts.marginX);
+                        const y = -row * (cts.imageHeight + cts.marginY);
+                        return (
+                            <ImagePlane
+                                key={index}
+                                position={[x, y, 0]}
+                                scale={[cts.imageWidth, cts.imageHeight]}
+                                url={url}
+                            />
+                        );
+                    })}
+                </Canvas>
+        </>
+    );
+}

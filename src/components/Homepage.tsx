@@ -1,19 +1,15 @@
 import { useEffect, useState} from "react";
 import {photoData} from "../data/data";
-import type {Photo} from "../types/Photo";
-
-import ImageMagnifier from "./MagnifierMouse";
-import ZoomableCanvasGrid from "./ZoombableCanvas3";
-import {ImgsUsingTag} from "./ImgsUsingTag";
-
+import Zoombable3JS from "./ZoombableCanvas3";
+import {useGeneralStore} from "./Provider";
 
 
 export default function Homepage() {
-    const [photos, setPhotos] = useState<Photo[]>([]);
-    // const [isLoaded, setIsLoaded] = useState(true);
+    const {photoTypes, setPhotoTypes, setPhotos} = useGeneralStore();
 
     useEffect(() => {
         setPhotos(photoData);
+        setPhotoTypes(Array.from(new Set(photoData.map(photo => photo.contentType))));
     }, []);
 
     // const photosByContentType = Array.from(
@@ -26,22 +22,12 @@ export default function Homepage() {
     //     }, new Map<string, Photo[]>())
     // ).map(([_, arr]) => arr);
 
-    const itemWidth = 132 *10
-    const itemHeight = itemWidth/16*9;
-    const itemsEachRow = 8;
-    const itemTotal = photos.length;
-
-    const gapX = itemWidth/16;
-    const containerWidth = itemWidth * itemsEachRow + gapX * (itemsEachRow - 1);
-    const containerHeight = Math.ceil(itemTotal / itemsEachRow) * itemHeight + gapX * (Math.ceil(itemTotal / itemsEachRow) - 1);
-
 
     return (
 
-        <div className="h-screen overflow-hidden bg-black text-white
-            relative"
+        <div className="h-screen overflow-hidden bg-black text-white relative"
             >
-                <ImgsUsingTag />
+                <Zoombable3JS />
         </div>
     );
 }
