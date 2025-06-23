@@ -12,55 +12,16 @@ const PADDING = 20;
 const ZoomableCanvasGrid = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const [scale, setScale] = useState(1);
+    const [scale, setScale] = useState(5);
+    const [currentScale, setCurrentScale] = useState<number>(1);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const dragStart = useRef({ x: 0, y: 0 });
     const imagesRef = useRef<HTMLImageElement[]>([]);
     const tileCache = useRef<Map<string, HTMLCanvasElement>>(new Map());
-    const needsRedraw = useRef(true); // Track when redraw is needed
+    const [reDraw, setReDraw] = useState<boolean>(false); // Force re-render on state change
 
-    // Load images and wait for them to be ready
-    useEffect(() => {
-        const loadImages = async () => {
-            imagesRef.current = await Promise.all(
-                imageUrls.map(
-                    (url) =>
-                        new Promise<HTMLImageElement>((resolve) => {
-                            const img = new Image();
-                            img.src = url;
-                            img.crossOrigin = "anonymous";
-                            img.onload = () => resolve(img);
-                            img.onerror = () => resolve(img); // Handle errors gracefully
-                        })
-                )
-            );
-            needsRedraw.current = true; // Trigger redraw after images load
-        };
-        loadImages();
-    }, []);
-
-    // Resize canvas to match container and handle high-DPI displays
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const container = containerRef.current;
-        if (!canvas || !container) return;
-
-        const resizeCanvas = () => {
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = container.clientWidth * dpr;
-            canvas.height = container.clientHeight * dpr;
-            canvas.style.width = `${container.clientWidth}px`;
-            canvas.style.height = `${container.clientHeight}px`;
-            needsRedraw.current = true; // Trigger redraw on resize
-        };
-
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
-        return () => window.removeEventListener("resize", resizeCanvas);
-    }, []);
-
+    // 1 draw
     const draw = () => {
+        console.log(currentScale)
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
@@ -68,13 +29,13 @@ const ZoomableCanvasGrid = () => {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1); // Support high-DPI
-
-        const visibleStartX = -offset.x / scale;
-        const visibleStartY = -offset.y / scale;
+        ctx.imageSmoothingEnabled = true; 
+        const visibleStartX = -offset.x / currentScale;
+        const visibleStartY = -offset.y / currentScale;
         const visibleEndX =
-            visibleStartX + canvas.width / scale / (window.devicePixelRatio || 1);
+            visibleStartX + canvas.width / currentScale / (window.devicePixelRatio || 1);
         const visibleEndY =
-            visibleStartY + canvas.height / scale / (window.devicePixelRatio || 1);
+            visibleStartY + canvas.height / currentScale / (window.devicePixelRatio || 1);
 
         for (let i = 0; i < imagesRef.current.length; i++) {
             const img = imagesRef.current[i];
@@ -94,13 +55,13 @@ const ZoomableCanvasGrid = () => {
                 continue;
             }
 
-            const cacheKey = `${i}-${Math.round(scale * 100)}`;
+            const cacheKey = `${i}-${Math.round(currentScale * 100)}`;
             let tile = undefined;
 
             if (!tile) {
                 tile = document.createElement("canvas");
-                tile.width = TILE_SIZE * scale;
-                tile.height = TILE_SIZE * scale;
+                tile.width = TILE_SIZE * currentScale;
+                tile.height = TILE_SIZE * currentScale;
                 const tileCtx = tile.getContext("2d");
                 if (tileCtx) {
                     tileCtx.drawImage(img, 0, 0, tile.width, tile.height);
@@ -114,108 +75,100 @@ const ZoomableCanvasGrid = () => {
                 }
             }
 
-            ctx.drawImage(tile, x * scale + offset.x, y * scale + offset.y);
+            ctx.drawImage(tile, x * currentScale + offset.x, y * currentScale + offset.y);
         }
 
         ctx.resetTransform(); // Reset for next draw
-        needsRedraw.current = false; // Mark as drawn
+        
+        if(currentScale < 5 && currentScale > 0.5) {
+            console.log("zooming in")
+            if(scale === 5) {
+                setCurrentScale(c => c + 0.001);
+            }
+            else if(scale === 0.5) {
+                setCurrentScale(c => c - 0.001);
+            }
+        }
+        else {
+            console.log("resetting zoom::::::::::::::", currentScale)
+            setReDraw(false); // Reset reDraw state
+        }
     };
 
-    // Only redraw when necessary
+
+    
+
+
+    // 3. Load images and wait for them to be ready
     useEffect(() => {
+        const loadImages = async () => {
+            imagesRef.current = await Promise.all(
+                imageUrls.map(
+                    (url) =>
+                        new Promise<HTMLImageElement>((resolve) => {
+                            const img = new Image();
+                            img.src = url;
+                            img.crossOrigin = "anonymous";
+                            img.onload = () => resolve(img);
+                            img.onerror = () => resolve(img); // Handle errors gracefully
+                        })
+                )
+            );
+            setReDraw(true); // Trigger redraw after images are loaded
+        };
+        loadImages();
+    }, []);
+
+    // 4. Resize canvas to match container and handle high-DPI displays
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const resizeCanvas = () => {
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = container.clientWidth * dpr;
+            canvas.height = container.clientHeight * dpr;
+            canvas.style.width = `${container.clientWidth}px`;
+            canvas.style.height = `${container.clientHeight}px`;
+            setReDraw(false); // Trigger redraw on resize
+        };
+
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+        return () => window.removeEventListener("resize", resizeCanvas);
+    }, []);
+
+    
+
+    // 5. redraw when necessary
+    useEffect(() => {
+        console.log("Redrawing canvas with scale:", currentScale,scale, reDraw);
         let animationFrameId: number;
         const render = () => {
-            if (needsRedraw.current) {
+            if (reDraw) {
                 draw();
-                needsRedraw.current = false;
+                // setReDraw(false); // Reset reDraw state
                 animationFrameId = requestAnimationFrame(render);
             }
         };
         render();
         return () => cancelAnimationFrame(animationFrameId);
-    }, [scale, offset]);
+    }, [currentScale, reDraw]);
+    
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        setIsDragging(true);
-        dragStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging) return;
-        setOffset({
-            x: e.clientX - dragStart.current.x,
-            y: e.clientY - dragStart.current.y,
-        });
-        needsRedraw.current = true; // Trigger redraw on pan
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
-
-    const handleWheel = (e: React.WheelEvent) => {
-        // e.preventDefault();
-        const delta = e.deltaY;
-        const zoomFactor = delta > 0 ? 0.9 : 1.1;
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const x = (mouseX - offset.x) / scale;
-        const y = (mouseY - offset.y) / scale;
-
-        const newScale = Math.max(0.1, Math.min(15, scale * zoomFactor)); // Limit zoom range
-        const newOffsetX = mouseX - x * newScale;
-        const newOffsetY = mouseY - y * newScale;
-
-        setScale(newScale);
-        setOffset({ x: newOffsetX, y: newOffsetY });
-        needsRedraw.current = true; // Trigger redraw on zoom
-    };
-
-    const handleDbClick = (e: any) => {
-        const zoomFactor = 1.1;
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const x = (mouseX - offset.x) / scale;
-        const y = (mouseY - offset.y) / scale;
-
-        const newScale = Math.max(0.1, Math.min(15, scale * zoomFactor)); // Limit zoom range
-        const newOffsetX = mouseX - x * newScale;
-        const newOffsetY = mouseY - y * newScale;
-
-        setScale(newScale);
-        setOffset({ x: newOffsetX, y: newOffsetY });
-        needsRedraw.current = true; // Trigger redraw on zoom
-    };
 
     return (
         <div>
             <div
                 ref={containerRef}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
-                onClick={handleDbClick}
                 style={{
                     width: "100%",
                     height: "800px",
                     overflow: "hidden",
                     border: "1px solid gray",
                     position: "relative",
-                    cursor: isDragging ? "grabbing" : "grab",
+                    // cursor: isDragging ? "grabbing" : "grab",
                 }}
             >
                 <canvas ref={canvasRef} />
@@ -232,25 +185,29 @@ const ZoomableCanvasGrid = () => {
             >
                 <button
                     onClick={() => {
+                        // console.log(currentScale, scale)
+                        setCurrentScale(c=>c + 0.001);
                         setScale(5);
-                        needsRedraw.current = true;
+                        setReDraw(true)
                     }}
                 >
                     Zoom In
                 </button>
                 <button
                     onClick={() => {
+                        // console.log(currentScale, scale)
+                        setCurrentScale(c=>c - 0.001);
                         setScale(0.5);
-                        needsRedraw.current = true;
+                        setReDraw(true)
                     }}
                 >
                     Zoom Out
                 </button>
                 <button
                     onClick={() => {
-                        setScale(1);
+                        // setScale(1);
                         setOffset({ x: 0, y: 0 });
-                        needsRedraw.current = true;
+                        setReDraw(true);
                     }}
                 >
                     Reset
