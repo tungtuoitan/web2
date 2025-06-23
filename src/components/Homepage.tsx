@@ -4,6 +4,7 @@ import type {Photo} from "../types/Photo";
 
 import ImageMagnifier from "./MagnifierMouse";
 import ZoomableCanvasGrid from "./ZoombableCanvas3";
+import {ImgsUsingTag} from "./ImgsUsingTag";
 
 
 
@@ -35,77 +36,12 @@ export default function Homepage() {
     const containerHeight = Math.ceil(itemTotal / itemsEachRow) * itemHeight + gapX * (Math.ceil(itemTotal / itemsEachRow) - 1);
 
 
-    // const preloadImage = (url: string): Promise<void> => {
-    //     return new Promise((resolve, reject) => {
-    //         const img = new Image();
-    //         img.src = url;
-    //         const resolveIn2Frames = () => {
-    //             requestAnimationFrame(() => {
-    //                 requestAnimationFrame(() => resolve());
-    //             })
-    //         };
-    //         // console.log(1)
-
-    //         img.onload = () => {
-    //             if ('decode' in img) {
-    //                 img.decode()
-    //                     .then(() => {
-    //                         // console.log(2)
-    //                         resolveIn2Frames();
-    //                     })
-    //                     .catch(() => {
-    //                         // console.log(3)
-    //                         resolveIn2Frames();
-    //                     }); 
-    //             } 
-    //         };
-
-    //         img.onerror = () => {
-    //             // console.log(4)
-    //             resolveIn2Frames();
-    //         };
-    //     });
-    // };
-
-    // useEffect(() => {
-    //     if(photos.length>0) {
-    //         const urls = photos.map(p => p.url ?? '').filter(url => url !== '');
-        
-    //         Promise.all(urls.map(preloadImage))
-    //             .then(() => {
-    //                 setTimeout(() => {
-    //                     setIsLoaded(false);
-    //                 }, 500); // Delay to ensure the UI is stable
-    //             });
-    //     }
-        
-    // }, [photos]);
-
-
     return (
 
         <div className="h-screen overflow-hidden bg-black text-white
             relative"
             >
-                {/* <PhotoFrame
-                    key={photos[0].id}
-                    photo={photos[0]}
-                    fitType="both"
-                    width={itemWidth}
-                /> */}
-                {/* <FisheyeLensCanvas/> */}
-                {/* <ImageMagnifier
-                    src="/bg3.jpg"
-                    className="w-full h-full object-cover"
-                    width={itemWidth}
-                    height={itemHeight}
-                    magnifierHeight={100}
-                    magnifierWidth={100}
-                    zoomLevel={2}
-                /> */}
-                <ZoomableCanvasGrid/>
-                {/* <EraserCanvas/> */}
-                {/* <img src="/bg1.png"/> */}
+                <ImgsUsingTag />
         </div>
     );
 }
